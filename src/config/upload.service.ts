@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import * as AWS from 'aws-sdk';
+// import * as AWS from 'aws-sdk';
 // import { S3Client } from '@aws-sdk/client-s3';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -8,7 +8,7 @@ import { promisify } from 'util';
 import * as bytes from 'bytes';
 
 @Injectable()
-export class LocalUploadService {
+export class S3UploadService {
   private uploadDirectory: string;
   private baseUrl: string;
   private uploadSizeLimit: number;
@@ -119,119 +119,119 @@ export class LocalUploadService {
   }
 }
 
-@Injectable()
-export class S3UploadService {
-  private s3: AWS.S3;
-  private bucketName: string;
-  private uploadSizeLimit: number;
-  private uploadSizeLimitConfig: string;
+// @Injectable()
+// export class S3UploadService {
+//   private s3: AWS.S3;
+//   private bucketName: string;
+//   private uploadSizeLimit: number;
+//   private uploadSizeLimitConfig: string;
 
-  constructor(private readonly configService: ConfigService) {
-    this.s3 = new AWS.S3({
-      accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
-      secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
-    });
-    this.bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
+//   constructor(private readonly configService: ConfigService) {
+//     this.s3 = new AWS.S3({
+//       accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
+//       secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
+//     });
+//     this.bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
 
-    this.uploadSizeLimitConfig = this.configService.get<string>(
-      'S3_UPLOAD_SIZE_LIMIT',
-    );
-    this.uploadSizeLimit = this.uploadSizeLimitConfig
-      ? this.parseBytesValue(this.uploadSizeLimitConfig)
-      : null;
-  }
+//     this.uploadSizeLimitConfig = this.configService.get<string>(
+//       'S3_UPLOAD_SIZE_LIMIT',
+//     );
+//     this.uploadSizeLimit = this.uploadSizeLimitConfig
+//       ? this.parseBytesValue(this.uploadSizeLimitConfig)
+//       : null;
+//   }
 
-  async uploadFile(file: any): Promise<string> {
-    try {
-      // Check file extension or MIME type
-      // const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
-      // const ext = path.extname(file.originalname).toLowerCase();
-      // if (!allowedExtensions.includes(ext)) {
-      //   throw new BadRequestException('Only image files are allowed');
-      // }
+//   async uploadFile(file: any): Promise<string> {
+//     try {
+//       // Check file extension or MIME type
+//       // const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+//       // const ext = path.extname(file.originalname).toLowerCase();
+//       // if (!allowedExtensions.includes(ext)) {
+//       //   throw new BadRequestException('Only image files are allowed');
+//       // }
 
-      // Check file size if uploadSizeLimit is provided
-      if (this.uploadSizeLimit !== null && file.size > this.uploadSizeLimit) {
-        throw new BadRequestException(
-          `File size exceeds the limit of ${this.uploadSizeLimitConfig}`,
-        );
-      }
+//       // Check file size if uploadSizeLimit is provided
+//       if (this.uploadSizeLimit !== null && file.size > this.uploadSizeLimit) {
+//         throw new BadRequestException(
+//           `File size exceeds the limit of ${this.uploadSizeLimitConfig}`,
+//         );
+//       }
 
-      // const randomString = this.generateRandomString(15);
-      // const key = `${randomString}-${Date.now()}${ext}`;
-      const key = `${Date.now()}-${file.originalname}`;
+//       // const randomString = this.generateRandomString(15);
+//       // const key = `${randomString}-${Date.now()}${ext}`;
+//       const key = `${Date.now()}-${file.originalname}`;
 
-      const params = {
-        Bucket: this.bucketName,
-        Key: key,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-        ACL: 'public-read',
-      };
+//       const params = {
+//         Bucket: this.bucketName,
+//         Key: key,
+//         Body: file.buffer,
+//         ContentType: file.mimetype,
+//         ACL: 'public-read',
+//       };
 
-      const data = await this.s3.upload(params).promise();
-      return data.Location;
-    } catch (error) {
-      console.error('Error uploading file to S3:', error);
-      throw error;
-    }
-  }
+//       const data = await this.s3.upload(params).promise();
+//       return data.Location;
+//     } catch (error) {
+//       console.error('Error uploading file to S3:', error);
+//       throw error;
+//     }
+//   }
 
-  async uploadFiles(files: any[]): Promise<any[]> {
-    const imageUrls = [];
+//   async uploadFiles(files: any[]): Promise<any[]> {
+//     const imageUrls = [];
 
-    for (const file of files) {
-      const imageUrl = await this.uploadFile(file);
-      imageUrls.push({ imageUrl });
-    }
+//     for (const file of files) {
+//       const imageUrl = await this.uploadFile(file);
+//       imageUrls.push({ imageUrl });
+//     }
 
-    return imageUrls;
-  }
+//     return imageUrls;
+//   }
 
-  public extractFileKeyFromUrl(url: string | URL) {
-    try {
-      const parsedUrl = new URL(url);
-      const pathName = parsedUrl.pathname;
-      const fileKey = decodeURIComponent(pathName.slice(1)); // Remove the leading '/'
+//   public extractFileKeyFromUrl(url: string | URL) {
+//     try {
+//       const parsedUrl = new URL(url);
+//       const pathName = parsedUrl.pathname;
+//       const fileKey = decodeURIComponent(pathName.slice(1)); // Remove the leading '/'
 
-      return fileKey;
-    } catch (error) {
-      console.error('Invalid URL:', error);
-      return null;
-    }
-  }
+//       return fileKey;
+//     } catch (error) {
+//       console.error('Invalid URL:', error);
+//       return null;
+//     }
+//   }
 
-  async deleteFile(fileKey: string): Promise<void> {
-    try {
-      const params = {
-        Bucket: this.bucketName,
-        Key: fileKey,
-      };
+//   async deleteFile(fileKey: string): Promise<void> {
+//     try {
+//       const params = {
+//         Bucket: this.bucketName,
+//         Key: fileKey,
+//       };
 
-      await this.s3.deleteObject(params).promise();
-    } catch (error) {
-      console.error('Error deleting file from S3:', error);
-      throw error;
-    }
-  }
+//       await this.s3.deleteObject(params).promise();
+//     } catch (error) {
+//       console.error('Error deleting file from S3:', error);
+//       throw error;
+//     }
+//   }
 
-  public parseBytesValue(value: string): number {
-    return bytes.parse(value);
-  }
+//   public parseBytesValue(value: string): number {
+//     return bytes.parse(value);
+//   }
 
-  private generateRandomString(length: number): string {
-    const charset =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    const charsetLength = charset.length;
-    const randomValues = new Uint8Array(length);
+//   private generateRandomString(length: number): string {
+//     const charset =
+//       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+//     let result = '';
+//     const charsetLength = charset.length;
+//     const randomValues = new Uint8Array(length);
 
-    crypto.getRandomValues(randomValues);
+//     crypto.getRandomValues(randomValues);
 
-    for (let i = 0; i < length; i++) {
-      result += charset[randomValues[i] % charsetLength];
-    }
+//     for (let i = 0; i < length; i++) {
+//       result += charset[randomValues[i] % charsetLength];
+//     }
 
-    return result;
-  }
-}
+//     return result;
+//   }
+// }
