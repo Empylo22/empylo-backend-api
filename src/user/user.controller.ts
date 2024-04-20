@@ -61,7 +61,7 @@ export class UserController {
     }
   }
 
-  @Patch('changePassword/:id')
+  @Patch('changePassword/:userId')
   async changePassword(
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: ChangePasswordDto,

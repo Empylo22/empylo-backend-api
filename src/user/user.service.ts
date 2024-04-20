@@ -56,6 +56,14 @@ export class UserService {
         disability,
       } = dto;
 
+      const foundUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!foundUser) {
+        throw new BadRequestException('User not found');
+      }
+
       if (!accountType) {
         throw new BadRequestException('Account type is required');
       }
@@ -76,6 +84,7 @@ export class UserService {
       if (disability) saveData.disability = disability;
       if (profileImage) {
         const fileUrl = await this.s3UploadService.uploadFile(profileImage);
+        // console.log(fileUrl);
         saveData.profileImage = fileUrl;
       }
 
@@ -236,7 +245,7 @@ export class UserService {
     const currentDate = new Date();
     const jwtString = await this.jwtService.signAsync(payload);
 
-    console.log(new Date(currentDate.getTime() + 5 * 60000));
+    // console.log(new Date(currentDate.getTime() + 5 * 60000));
 
     await this.prisma.otpObject.create({
       data: {
@@ -360,7 +369,7 @@ export class UserService {
     return 'User deleted successfully';
   }
 
-  async forgetPassword(resendCodeDto: OtpDto, req: any): Promise<string> {
+  async forgetPassword(resendCodeDto: OtpDto): Promise<string> {
     const { email } = resendCodeDto;
     const user = await this.prisma.user.findUnique({ where: { email } });
 

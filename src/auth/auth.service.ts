@@ -317,7 +317,7 @@ export class AuthService {
       );
     }
 
-    console.log(existingUser);
+    // console.log(existingUser);
 
     if (existingUser.isEmailVerified == false) {
       throw new BadRequestException(
@@ -361,7 +361,7 @@ export class AuthService {
       },
     });
 
-    console.log(twoStepToken);
+    // console.log(twoStepToken);
 
     if (!twoStepToken) {
       throw new BadRequestException(
@@ -459,7 +459,7 @@ export class AuthService {
       },
     });
 
-    console.log(passwordResetToken);
+    // console.log(passwordResetToken);
 
     if (!passwordResetToken) {
       throw new BadRequestException(
@@ -508,67 +508,6 @@ export class AuthService {
       accessToken: await this.jwtService.signAsync(payload),
       user: userUpatedPassword,
     };
-  }
-
-  async validateUser(email: string, password: string): Promise<User> {
-    console.log('here');
-    const user = await this.userService.findByEmail(email);
-    if (user) {
-      if (user.isDeleted == true) {
-        throw new HttpException('User not found.', HttpStatus.NOT_FOUND);
-      }
-
-      if (user.isActivated == false) {
-        throw new HttpException(
-          'Your account has been deactivated. Please contact support for assistance.',
-          HttpStatus.NOT_FOUND,
-        );
-      }
-
-      if (!(await comparePassword(password, user.password))) {
-        throw new BadRequestException(
-          'Invalid email or password. Please check your credentials and try again',
-        );
-      }
-      // compare password to hashed passwords
-      if (user && (await comparePassword(password, user.password))) {
-        // delete password before returning user
-        delete user.password;
-        return user;
-      }
-      return null;
-    }
-    // throw new HttpException(
-    //   'Error: Invalid email or password. Please check your credentials and try again',
-    //   HttpStatus.BAD_REQUEST,
-    // );
-    throw new BadRequestException(
-      'Invalid email or password. Please check your credentials and try again',
-    );
-  }
-
-  async generateAndSendOtp(req: any): Promise<any> {
-    const savedOtp = await this.userService.generateOtp(req.user);
-
-    if (savedOtp) {
-      return savedOtp;
-    }
-  }
-
-  async passwordReset(
-    token: string,
-    passwordResetDto: PasswordResetDto,
-    req: any,
-  ): Promise<any> {
-    const updatedUser = await this.userService.passwordReset(
-      token,
-      passwordResetDto,
-      req,
-    );
-
-    if (updatedUser) {
-      return updatedUser;
-    }
   }
 
   async activateAccount(
