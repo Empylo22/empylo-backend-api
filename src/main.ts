@@ -24,7 +24,7 @@ async function bootstrap() {
     .setTitle('Employ Project')
     .setDescription('The Employ API description.')
     .setVersion('1.0')
-    .addServer(`http://${ipAddress}:${httpPort}`)
+    // .addServer(`http://${ipAddress}:${httpPort}`)
     .addBearerAuth({
       in: 'header',
       type: 'http',
