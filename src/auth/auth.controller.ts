@@ -41,20 +41,26 @@ export class AuthController {
   async userGettingStarted(
     @Body() dto: UserGettingStartedDto,
   ): Promise<BaseResponse> {
-    try {
-      const result = await this.authService.userGettingStarted(dto);
-      return {
-        message: 'User created. Email sent.',
-        status: HttpStatus.OK,
-        result,
-      };
-    } catch (error) {
-      return {
-        message: error.message || 'An error occurred.',
-        status: HttpStatus.BAD_REQUEST,
-        // error: error.stack,
-      };
-    }
+    const result = await this.authService.userGettingStarted(dto);
+    return {
+      message: 'User created. Email sent.',
+      status: HttpStatus.OK,
+      result,
+    };
+    // try {
+    //   const result = await this.authService.userGettingStarted(dto);
+    //   return {
+    //     message: 'User created. Email sent.',
+    //     status: HttpStatus.OK,
+    //     result,
+    //   };
+    // } catch (error) {
+    //   return {
+    //     message: error.message || 'An error occurred.',
+    //     status: HttpStatus.BAD_REQUEST,
+    //     // error: error.stack,
+    //   };
+    // }
   }
 
   @ApiBody({ type: VerifyDto })
@@ -64,7 +70,7 @@ export class AuthController {
     try {
       const response = await this.authService.verifyEmailOtp(verifyDto.otp);
       return {
-        message: 'Email token verified.',
+        message: 'Email verification successful.',
         status: HttpStatus.OK,
         result: response,
       };

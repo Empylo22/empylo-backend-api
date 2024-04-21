@@ -3,31 +3,22 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { User, Prisma } from '@prisma/client';
+import { User } from '@prisma/client';
 import {
   hashFunction,
   comparePassword,
   createOTPToken,
 } from 'src/common/utils';
-import { PasswordResetDto } from 'src/user/dto/password-reset.dto';
-import { OtpDto } from 'src/user/dto/resend-code.dto';
 import { UserService } from 'src/user/user.service';
 import { MailService } from 'src/mail/mail.service';
-
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
-  ChangePasswordDto,
   ForgotPasswordDto,
-  GettingStartedUpdateProfileDto,
   LoginDto,
   ResetPasswordDto,
   UserGettingStartedDto,
-  VerifyEmailDto,
 } from './dto/auth.dto';
 
 @Injectable()
@@ -92,9 +83,10 @@ export class AuthService {
       return 'Account successfully created. Check email for verification code';
     } catch (error) {
       console.error('Error creating user or activation token:', error);
-      throw new BadRequestException(
-        'An error occurred during account creation',
-      );
+      // throw new BadRequestException(
+      //   'An error occurred during account creation',
+      // );
+      throw error;
     }
   }
 
@@ -229,7 +221,7 @@ export class AuthService {
   //   }
   // }
 
-  async verifyEmailOtp(token: string): Promise<string> {
+  async verifyEmailOtp(token: string): Promise<any> {
     const emailToken = await this.prisma.tokenManager.findFirst({
       where: {
         token,
@@ -267,7 +259,15 @@ export class AuthService {
       data: { isUsed: true },
     });
 
-    return 'Email verification successful';
+    // return 'Email verification successful';
+    const payload = {
+      sub: updatedUser,
+    };
+    delete updatedUser.password;
+    return {
+      accessToken: await this.jwtService.signAsync(payload),
+      user: updatedUser,
+    };
   }
 
   async generateAndTwoStepOTP(user: User): Promise<any> {
@@ -299,7 +299,8 @@ export class AuthService {
       return 'Check your mail for two step verification code';
     } catch (error) {
       console.error('Error creating user or activation token:', error);
-      throw new BadRequestException('An error occurred! Try again later');
+      // throw new BadRequestException('An error occurred! Try again later');
+      throw error;
     }
   }
 
@@ -508,21 +509,5 @@ export class AuthService {
       accessToken: await this.jwtService.signAsync(payload),
       user: userUpatedPassword,
     };
-  }
-
-  async activateAccount(
-    token: string,
-    passwordResetDto: PasswordResetDto,
-    req: any,
-  ): Promise<any> {
-    const updatedUser = await this.userService.activateAccount(
-      token,
-      passwordResetDto,
-      req,
-    );
-
-    if (updatedUser) {
-      return updatedUser;
-    }
   }
 }

@@ -181,7 +181,7 @@ export class S3UploadService {
         ACL: 'public-read' as ObjectCannedACL,
       };
 
-      const uploadedObject = await this.s3.send(new PutObjectCommand(params));
+      await this.s3.send(new PutObjectCommand(params));
       const url = await getSignedUrl(
         this.s3,
         new GetObjectCommand({

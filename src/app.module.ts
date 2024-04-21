@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -11,6 +11,9 @@ import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from './auth/guards/jwt-guard.guard';
 import { MailService } from './mail/mail.service';
 import { MailerService } from './mailer/mailer.service';
+import { CirclesModule } from './circles/circles.module';
+import { providePrismaClientExceptionFilter } from 'nestjs-prisma';
+import { AllExceptionsFilter } from './common/error/all-exceptions.filter.ts';
 
 @Module({
   imports: [
@@ -23,9 +26,11 @@ import { MailerService } from './mailer/mailer.service';
     AuthModule,
     UserModule,
     RolesModule,
+    CirclesModule,
   ],
   controllers: [AppController],
   providers: [
+    providePrismaClientExceptionFilter(),
     JwtService,
     MailService,
     MailerService,
@@ -34,6 +39,11 @@ import { MailerService } from './mailer/mailer.service';
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: AllExceptionsFilter,
+    // },
   ],
+  // exports: [PrismaModule],
 })
 export class AppModule {}

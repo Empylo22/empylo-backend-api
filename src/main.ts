@@ -1,8 +1,16 @@
-import { NestFactory, Reflector } from '@nestjs/core';
+import {
+  AbstractHttpAdapter,
+  HttpAdapterHost,
+  NestFactory,
+  Reflector,
+} from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from './config/config.service';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { PrismaClientExceptionFilter } from 'nestjs-prisma';
+import { AllExceptionsFilter } from './common/error/all-exceptions.filter.ts';
+import { CustomHttpAdapterHost } from './common/error/custom-http-adapter-host';
 
 async function bootstrap() {
   const httpPort = new ConfigService().get('httpPort');
@@ -15,6 +23,14 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
+
+  // const customHttpAdapterHost = new CustomHttpAdapterHost(httpAdapter);
+  // app.useGlobalFilters(new AllExceptionsFilter(customHttpAdapterHost));
+  // app.useGlobalFilters(new AllExceptionsFilter(customHttpAdapterHost));
+
   // app.setGlobalPrefix('/user-and-auth');
   app.enableCors({
     origin: '*',

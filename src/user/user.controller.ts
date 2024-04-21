@@ -12,8 +12,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+
 import { ApiBody, ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BaseResponse } from 'src/common/utils';
@@ -29,11 +28,35 @@ export class UserController {
 
   @ApiResponse({
     status: 200,
+    description: 'The User has successfully been retrieved.',
+  })
+  @Get('get-user-info/:userId')
+  public async findById(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<BaseResponse> {
+    try {
+      const updatedUser = await this.userService.findById(userId);
+      return {
+        message: 'User retrieved successfully.',
+        status: HttpStatus.OK,
+        result: updatedUser,
+      };
+    } catch (error) {
+      return {
+        message: error.message || 'An error occurred.',
+        status: HttpStatus.BAD_REQUEST,
+        // error: error.stack,
+      };
+    }
+  }
+
+  @ApiResponse({
+    status: 200,
     description: 'The User basic info has ben updated.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: GettingStartedUpdateProfileDto })
-  @Patch('update-basic-info/:userId')
+  @Patch('update-user-info/:userId')
   @UseInterceptors(FileInterceptor('profileImage'))
   public async updateBasicInfo(
     @UploadedFile()
@@ -61,7 +84,7 @@ export class UserController {
     }
   }
 
-  @Patch('changePassword/:userId')
+  @Patch('change-password/:userId')
   async changePassword(
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: ChangePasswordDto,
