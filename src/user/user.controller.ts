@@ -10,17 +10,27 @@ import {
   UploadedFile,
   HttpStatus,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 
-import { ApiBody, ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BaseResponse } from 'src/common/utils';
 import {
   ChangePasswordDto,
   GettingStartedUpdateProfileDto,
 } from 'src/auth/dto/auth.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-guard.guard';
 
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('user')
 @ApiTags('user')
 export class UserController {
@@ -34,25 +44,26 @@ export class UserController {
   public async findById(
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<BaseResponse> {
-    try {
-      const updatedUser = await this.userService.findById(userId);
-      return {
-        message: 'User retrieved successfully.',
-        status: HttpStatus.OK,
-        result: updatedUser,
-      };
-    } catch (error) {
-      return {
-        message: error.message || 'An error occurred.',
-        status: HttpStatus.BAD_REQUEST,
-        // error: error.stack,
-      };
-    }
+    const updatedUser = await this.userService.findById(userId);
+    return {
+      message: 'User retrieved successfully.',
+      status: HttpStatus.OK,
+      result: updatedUser,
+    };
+    // try {
+
+    // } catch (error) {
+    //   return {
+    //     message: error.message || 'An error occurred.',
+    //     status: HttpStatus.BAD_REQUEST,
+    //     // error: error.stack,
+    //   };
+    // }
   }
 
   @ApiResponse({
     status: 200,
-    description: 'The User basic info has ben updated.',
+    description: 'The user info has ben updated.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: GettingStartedUpdateProfileDto })
@@ -64,24 +75,34 @@ export class UserController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() updateBasicInfoDto: GettingStartedUpdateProfileDto,
   ): Promise<BaseResponse> {
-    try {
-      const updatedUser = await this.userService.userUpdateProfile(
-        profileImage,
-        userId,
-        updateBasicInfoDto,
-      );
-      return {
-        message: 'Profle updated successfully.',
-        status: HttpStatus.OK,
-        result: updatedUser,
-      };
-    } catch (error) {
-      return {
-        message: error.message || 'An error occurred.',
-        status: HttpStatus.BAD_REQUEST,
-        // error: error.stack,
-      };
-    }
+    const updatedUser = await this.userService.userUpdateProfile(
+      profileImage,
+      userId,
+      updateBasicInfoDto,
+    );
+    return {
+      message: 'Profle updated successfully.',
+      status: HttpStatus.OK,
+      result: updatedUser,
+    };
+    // try {
+    //   const updatedUser = await this.userService.userUpdateProfile(
+    //     profileImage,
+    //     userId,
+    //     updateBasicInfoDto,
+    //   );
+    //   return {
+    //     message: 'Profle updated successfully.',
+    //     status: HttpStatus.OK,
+    //     result: updatedUser,
+    //   };
+    // } catch (error) {
+    //   return {
+    //     message: error.message || 'An error occurred.',
+    //     status: HttpStatus.BAD_REQUEST,
+    //     // error: error.stack,
+    //   };
+    // }
   }
 
   @Patch('change-password/:userId')

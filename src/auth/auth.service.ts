@@ -431,7 +431,7 @@ export class AuthService {
     try {
       await this.userService.generateOTP(otpToken, 10, 'Password Reset', user);
 
-      await this.mailService.forgotPassword({
+      const email = await this.mailService.forgotPassword({
         to: user.email,
         data: {
           name: user.firstName,
@@ -439,8 +439,11 @@ export class AuthService {
         },
       });
 
+      console.log(email);
+
       return 'Check Mail for next steps';
     } catch (error) {
+      console.log(error);
       throw new HttpException(
         'An error occurred! Try again later',
         HttpStatus.INTERNAL_SERVER_ERROR,

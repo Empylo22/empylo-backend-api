@@ -64,6 +64,7 @@ model User {
   companyId           Int?
   roleId              Int?
   profileImage        String?
+  ageRange            String?
   lastLogin           DateTime?
   isEmailVerified     Boolean?       @default(false)
   status              String?        @default("inactive")

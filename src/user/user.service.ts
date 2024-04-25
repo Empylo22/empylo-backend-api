@@ -92,7 +92,8 @@ export class UserService {
         throw new BadRequestException('Failed to update profile');
       }
     } catch (error) {
-      throw new BadRequestException(error.message);
+      // throw new BadRequestException(error.message);
+      throw error;
     }
   }
 

@@ -35,10 +35,10 @@ import { AllExceptionsFilter } from './common/error/all-exceptions.filter.ts';
     MailService,
     MailerService,
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: JwtAuthGuard,
+    // },
     // {
     //   provide: APP_FILTER,
     //   useClass: AllExceptionsFilter,
