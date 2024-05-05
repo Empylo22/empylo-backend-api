@@ -46,7 +46,7 @@ export class CreateCircleWithMembersDto {
   circleScoreDetail?: string;
 
   @ApiProperty({ required: false, nullable: true })
-  @IsArray()
+  // @IsArray()
   // @IsEmail()
   circleMembersEmail: string[];
 }

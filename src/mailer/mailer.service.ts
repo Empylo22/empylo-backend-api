@@ -10,7 +10,7 @@ export class MailerService {
   constructor(private readonly configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
       host: configService.get('MAIL_HOST', { infer: true }),
-      port: configService.get('MAIL_PORT', { infer: true }),
+      // port: configService.get('MAIL_PORT', { infer: true }),
       // service: configService.get('MAIL_SERVICE_PROVIDER', { infer: true }),
       // ignoreTLS: configService.get('MAIL_IGNORE_TLS', { infer: true }),
       // secure: configService.get('MAIL_SECURE', { infer: true }),

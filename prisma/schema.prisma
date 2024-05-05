@@ -63,12 +63,17 @@ model User {
   isDeleted           Boolean        @default(false)
   companyId           Int?
   roleId              Int?
+  ethnicity           String?
+  department          String?
+  jobRole             String?
+  DOB                 String?
   profileImage        String?
   ageRange            String?
   lastLogin           DateTime?
   isEmailVerified     Boolean?       @default(false)
   status              String?        @default("inactive")
   gender              String?
+  disability          String?
   maritalStatus       String?
   empyloID            String?
   industry            String?
@@ -84,14 +89,57 @@ model User {
   socialProvider      String?
   createdAt           DateTime?      @default(now())
   updatedAt           DateTime?      @updatedAt
-  // activationToken     ActivationToken[]
-  // otpObject           OtpObject[]
-  // resetToken          ResetToken[]
   role                Role?          @relation(fields: [roleId], references: [id])
   tokenManager        TokenManager[]
   circles             Circle[]       @relation("CircleMembers")
   ownedCircles        Circle[]
+  company             User?          @relation("CompanyMembers", fields: [companyId], references: [id])
+  members             User[]         @relation("CompanyMembers")
 }
+
+// model User {
+//   id                  Int            @id @default(autoincrement())
+//   firstName           String?
+//   lastName            String?
+//   email               String         @unique
+//   password            String?
+//   accountType         String?
+//   phoneNumber         String?        @unique
+//   isActivated         Boolean        @default(false)
+//   twoStepVerification Boolean        @default(false)
+//   companyName         String?
+//   isDeleted           Boolean        @default(false)
+//   companyId           Int?
+//   roleId              Int?
+//   profileImage        String?
+//   ageRange            String?
+//   lastLogin           DateTime?
+//   isEmailVerified     Boolean?       @default(false)
+//   status              String?        @default("inactive")
+//   gender              String?
+//   maritalStatus       String?
+//   empyloID            String?
+//   industry            String?
+//   website             String?
+//   companyDescription  String?
+//   address             String?
+//   addressCity         String?
+//   addressState        String?
+//   emailNotification   Boolean?       @default(false)
+//   campaignNtification Boolean?       @default(false)
+//   termsConditions     Boolean?       @default(false)
+//   socialId            String?
+//   socialProvider      String?
+//   createdAt           DateTime?      @default(now())
+//   updatedAt           DateTime?      @updatedAt
+//   // activationToken     ActivationToken[]
+//   // otpObject           OtpObject[]
+//   // resetToken          ResetToken[]
+//   role                Role?          @relation(fields: [roleId], references: [id])
+//   tokenManager        TokenManager[]
+//   circles             Circle[]       @relation("CircleMembers")
+//   ownedCircles        Circle[]
+// }
 
 model Circle {
   id                Int      @id @default(autoincrement())

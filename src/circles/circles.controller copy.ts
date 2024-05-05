@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   NotFoundException,
   InternalServerErrorException,
   UseInterceptors,
@@ -14,18 +15,19 @@ import {
   HttpStatus,
   ParseIntPipe,
   UseGuards,
-  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
+  ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiConflictResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiQuery,
+  ApiCreatedResponse,
   ApiBody,
   ApiBearerAuth,
-  ApiConsumes,
 } from '@nestjs/swagger';
 
 import { CirclesService } from './circles.service';
@@ -34,6 +36,8 @@ import { UpdateCircleDto } from './dto/update-circle.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { Circle } from '@prisma/client';
+import { CreateCircleDto } from './dto/create-circle.dto';
 import { BaseResponse } from 'src/common/utils';
 import { CreateCircleWithMembersDto } from './dto/create-circle-with-members.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-guard.guard';
@@ -57,7 +61,7 @@ export class CirclesController {
         createCircleDto,
       );
       return {
-        message: 'Circle created successfully',
+        message: 'Circle created with members successfully',
         status: HttpStatus.CREATED,
         result: circle,
       };
@@ -104,67 +108,76 @@ export class CirclesController {
   // }
   @Post('add-circle-member/:circleId/members/:userEmail')
   async addMemberToCircle(
-    @Param('circleId', ParseIntPipe) circleId: number,
+    @Param('circleId') circleId: number,
     @Param('userEmail') userEmail: string,
   ) {
-    const result = await this.circleService.addMemberToCircle(
-      userEmail,
-      circleId,
-    );
-    return {
-      message: 'Circle member added successfully',
-      status: HttpStatus.CREATED,
-      result,
-    };
+    // return {
+    //   message: 'Circle created with members successfully',
+    //   status: HttpStatus.CREATED,
+    //   result: circle,
+    // };
+    try {
+      return await this.circleService.addMemberToCircle(userEmail, circleId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
-  @Post('remove-circle-member/:circleId/members/:memberId/remove')
+  @Post('/:circleId/members/:userEmail/remove')
   async removeMemberFromCircle(
     @Param('circleId') circleId: number,
     @Param('memberId') memberId: number,
   ) {
-    const result = await this.circleService.removeMemberFromCircle(
-      +memberId,
-      +circleId,
-    );
-
-    return {
-      message: 'Circle member removed successfully',
-      status: HttpStatus.OK,
-      result,
-    };
+    try {
+      return await this.circleService.removeMemberFromCircle(
+        memberId,
+        circleId,
+      );
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
-  @Get('get-all-circle-members/:circleId/members')
+  @Get('/:circleId/members')
   async getAllMembersOfCircle(@Param('circleId') circleId: number) {
-    const result = await this.circleService.getAllMembersOfCircle(+circleId);
-    return {
-      message: 'All circle members retrieved successfully',
-      status: HttpStatus.OK,
-      result,
-    };
+    try {
+      return await this.circleService.getAllMembersOfCircle(+circleId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
-  @Get('get-all-circles-user-belong/members/:memberId')
+  @Get('/members/:userEmail')
   async getAllCirclesUserIsMemberOf(@Param('memberId') memberId: number) {
-    const result =
-      await this.circleService.getAllCirclesUserIsMemberOf(+memberId);
-    return {
-      message: 'All user circles retrieved successfully',
-      status: HttpStatus.OK,
-      result,
-    };
+    try {
+      return await this.circleService.getAllCirclesUserIsMemberOf(+memberId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
-  @Get('get-all-circles-user-created/owned/:memberId')
+  @Get('/owned/:userEmail')
   async getAllCirclesCreatedByUser(@Param('memberId') memberId: number) {
-    const result =
-      await this.circleService.getAllCirclesCreatedByUser(+memberId);
-    return {
-      message: 'All circles created by user retrieved successfully',
-      status: HttpStatus.OK,
-      result,
-    };
+    try {
+      return await this.circleService.getAllCirclesCreatedByUser(+memberId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
   // @Post()
@@ -182,115 +195,103 @@ export class CirclesController {
   //   }
   // }
 
-  @Delete('delete-circle/:circleId')
+  @Delete('/:circleId')
   async deleteCircle(@Param('circleId') circleId: number) {
-    const result = await this.circleService.deleteCircle(+circleId);
-    return {
-      message: 'Circle deleted successfully',
-      status: HttpStatus.OK,
-      result,
-    };
+    try {
+      return await this.circleService.deleteCircle(circleId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
-  @Patch('update-circle/:circleId')
+  @Put('/:circleId')
   async updateCircle(
     @Param('circleId') circleId: number,
     @Body() updateCircleDto: UpdateCircleDto,
   ) {
-    const result = await this.circleService.updateCircle(
-      +circleId,
-      updateCircleDto,
-    );
-    return {
-      message: 'Circle updated successfully',
-      status: HttpStatus.CREATED,
-      result,
-    };
+    try {
+      return await this.circleService.updateCircle(circleId, updateCircleDto);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
-  @Get('get-all-circles')
+  @Get()
   async getAllCircles() {
-    const result = await this.circleService.getAllCircles();
-    return {
-      message: 'All circles retrived successfully',
-      status: HttpStatus.OK,
-      result,
-    };
+    try {
+      return await this.circleService.getAllCircles();
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
   }
 
-  @Get('get-circle-by-id/:circleId')
+  @Get('/:circleId')
   async getCircleById(@Param('circleId') circleId: number) {
-    const result = await this.circleService.getCircleById(+circleId);
-    return {
-      message: 'Circle retrived successfully',
-      status: HttpStatus.OK,
-      result,
-    };
+    try {
+      return await this.circleService.getCircleById(circleId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
-  // @Post('batch-upload-add-circle-member/:circleId/members/batch')
-  // @UseInterceptors(
-  //   FileInterceptor('file', {
-  //     storage: diskStorage({
-  //       destination: './uploads',
-  //       filename: (req, file, cb) => {
-  //         const uniqueSuffix =
-  //           Date.now() + '-' + Math.round(Math.random() * 1e9);
-  //         const ext = extname(file.originalname);
-  //         const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
-  //         cb(null, filename);
-  //       },
-  //     }),
-  //   }),
-  // )
-  // async batchAddMembersToCircle(
-  //   @Param('circleId') circleId: number,
-  //   @UploadedFile() file: Express.Multer.File,
-  // ) {
-  //   const result = await this.circleService.batchAddMembersToCircle(
-  //     circleId,
-  //     file,
-  //   );
-
-  //   return {
-  //     message: 'Circle members batch upload added successfully',
-  //     status: HttpStatus.CREATED,
-  //     result,
-  //   };
-  // }
-
-  @ApiConsumes('multipart/form-data') // Specify the content type
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary', // Specify binary format for file upload
+  @Post('/:circleId/members/batch')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
+          cb(null, filename);
         },
-      },
-    },
-  })
-  @Post('batch-upload-add-circle-members/:circleId/members/batch')
-  // @UseInterceptors(
-  //   FileInterceptor('file', {
-  //     storage: diskStorage({
-  //       destination: './uploads',
-  //       filename: (req, file, cb) => {
-  //         const uniqueSuffix =
-  //           Date.now() + '-' + Math.round(Math.random() * 1e9);
-  //         const ext = extname(file.originalname);
-  //         const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
-  //         cb(null, filename);
-  //       },
-  //     }),
-  //   }),
-  // )
-  @UseInterceptors(FileInterceptor('file'))
-  public async batchAddMembersToCircleWithNotFoundMailError(
-    @UploadedFile()
-    file: Express.Multer.File,
-    @Param('circleId', ParseIntPipe) circleId: number,
+      }),
+    }),
+  )
+  async batchAddMembersToCircle(
+    @Param('circleId') circleId: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    try {
+      return await this.circleService.batchAddMembersToCircle(circleId, file);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException();
+    }
+  }
+
+  @Post('/:circleId/members/batchWithNotFoundEMailError')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
+          cb(null, filename);
+        },
+      }),
+    }),
+  )
+  async batchAddMembersToCircleWithNotFoundMailError(
+    @Param('circleId') circleId: number,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     try {
       return await this.circleService.batchAddMembersToCircle(circleId, file);
@@ -305,18 +306,22 @@ export class CirclesController {
     }
   }
 
-  @Get('join-circle-with-sharelink/:shareLink')
+  @Get('join/:shareLink')
   @ApiOperation({ summary: 'Join a circle using a share link' })
   @ApiParam({
     name: 'shareLink',
     description: 'Share link of the circle',
-    example: 'https://empylo.com/circle/abc123',
+    example: 'https://example.com/circle/abc123',
   })
   @ApiQuery({
     name: 'userEmail',
     description: 'User email for joining the circle',
     example: 'user@example.com',
   })
+  // @ApiOkResponse({
+  //   description: 'Successfully joined the circle',
+  //   type: Circle,
+  // })
   @ApiNotFoundResponse({ description: 'Invalid share link or user not found' })
   @ApiConflictResponse({
     description: 'User is already a member of the circle',
@@ -324,15 +329,15 @@ export class CirclesController {
   async joinCircleByShareLink(
     @Param('shareLink') shareLink: string,
     @Query('userEmail') userEmail: string,
-  ): Promise<BaseResponse | null> {
-    const result = await this.circleService.joinCircleByShareLink(
-      shareLink,
-      userEmail,
-    );
-    return {
-      message: 'Circle joined successfully',
-      status: HttpStatus.OK,
-      result,
-    };
+  ): Promise<Circle | null> {
+    try {
+      const circle = await this.circleService.joinCircleByShareLink(
+        shareLink,
+        userEmail,
+      );
+      return circle;
+    } catch (error) {
+      throw error; // Let NestJS handle the caught error with appropriate status code
+    }
   }
 }

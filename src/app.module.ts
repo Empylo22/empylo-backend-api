@@ -4,7 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
+import { UserModule } from './users/user.module';
 import { RolesModule } from './roles/roles.module';
 import { ConfigModule } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -14,6 +14,7 @@ import { MailerService } from './mailer/mailer.service';
 import { CirclesModule } from './circles/circles.module';
 import { providePrismaClientExceptionFilter } from 'nestjs-prisma';
 import { AllExceptionsFilter } from './common/error/all-exceptions.filter.ts';
+import { CompanyModule } from './company/company.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AllExceptionsFilter } from './common/error/all-exceptions.filter.ts';
     UserModule,
     RolesModule,
     CirclesModule,
+    CompanyModule,
   ],
   controllers: [AppController],
   providers: [

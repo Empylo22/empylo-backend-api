@@ -233,7 +233,7 @@ export class UserService {
       if (!user) {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
-
+      delete user.password;
       return user;
     } catch (error) {
       // Handle specific errors if needed

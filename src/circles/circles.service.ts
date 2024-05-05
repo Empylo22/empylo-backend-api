@@ -51,12 +51,12 @@ export class CirclesService {
     }
   }
 
-  async removeMemberFromCircle(userEmail: string, circleId: number) {
+  async removeMemberFromCircle(memberId: number, circleId: number) {
     const user = await this.prisma.user.findUnique({
-      where: { email: userEmail },
+      where: { id: memberId },
     });
     if (!user) {
-      throw new NotFoundException(`User with email ${userEmail} not found`);
+      throw new NotFoundException(`User with id ${memberId} not found`);
     }
 
     try {
@@ -100,12 +100,12 @@ export class CirclesService {
     }
   }
 
-  async getAllCirclesUserIsMemberOf(userEmail: string) {
+  async getAllCirclesUserIsMemberOf(memberId: number) {
     const user = await this.prisma.user.findUnique({
-      where: { email: userEmail },
+      where: { id: memberId },
     });
     if (!user) {
-      throw new NotFoundException(`User with email ${userEmail} not found`);
+      throw new NotFoundException(`User with id ${memberId} not found`);
     }
 
     try {
@@ -119,12 +119,12 @@ export class CirclesService {
     }
   }
 
-  async getAllCirclesCreatedByUser(userEmail: string) {
+  async getAllCirclesCreatedByUser(memberId: number) {
     const user = await this.prisma.user.findUnique({
-      where: { email: userEmail },
+      where: { id: memberId },
     });
     if (!user) {
-      throw new NotFoundException(`User with email ${userEmail} not found`);
+      throw new NotFoundException(`User with id ${memberId} not found`);
     }
 
     try {
@@ -177,22 +177,86 @@ export class CirclesService {
     }
   }
 
-  async updateCircle(circleId: number, updateCircleDto: UpdateCircleDto) {
+  // async updateCircle(circleId: number, updateCircleDto: UpdateCircleDto) {
+  //   try {
+  //     const updatedCircle = await this.prisma.circle.update({
+  //       where: { id: circleId },
+  //       data: updateCircleDto,
+  //     });
+  //     if (!updatedCircle) {
+  //       throw new NotFoundException(`Circle with id ${circleId} not found`);
+  //     }
+  //     return updatedCircle;
+  //   } catch (error) {
+  //     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+  //       if (error.code === 'P2025') {
+  //         throw new NotFoundException(`Circle with id ${circleId} not found`);
+  //       }
+  //     }
+  //     throw error;
+  //   }
+  // }
+
+  async updateCircle(circleId: number, updateData: UpdateCircleDto) {
+    const { circleMembersEmail, ...circleData } = updateData;
+
     try {
-      const updatedCircle = await this.prisma.circle.update({
+      let existingUserIds: number[] = [];
+      if (circleMembersEmail && circleMembersEmail.length > 0) {
+        const users = await this.prisma.user.findMany({
+          where: {
+            email: {
+              in: circleMembersEmail,
+            },
+          },
+        });
+
+        existingUserIds = users.map((user) => user.id);
+      }
+
+      const baseUrl = 'https://empylo.com';
+      const shareLink = await this.generateUniqueCircleShareLink(baseUrl);
+
+      // Find the existing circle by its ID
+      const existingCircle = await this.prisma.circle.findUnique({
         where: { id: circleId },
-        data: updateCircleDto,
+        include: { members: true }, // Include members to disconnect existing members
       });
-      if (!updatedCircle) {
+
+      // if (!existingCircle) {
+      //   throw new Error('Circle not found.');
+      // }
+
+      if (!existingCircle) {
         throw new NotFoundException(`Circle with id ${circleId} not found`);
       }
-      return updatedCircle;
+
+      // Disconnect existing members from the circle
+      await this.prisma.circle.update({
+        where: { id: circleId },
+        data: {
+          members: { disconnect: existingCircle.members },
+          ...circleData, // Update circle data
+          circleShareLink: shareLink, // Include circleShareLink
+        },
+      });
+
+      // Connect new members to the circle
+      await this.prisma.circle.update({
+        where: { id: circleId },
+        data: {
+          members: {
+            connect: existingUserIds.map((userId) => ({ id: userId })),
+          },
+        },
+        include: { members: true },
+      });
+
+      return await this.prisma.circle.findUnique({
+        where: { id: circleId },
+        include: { members: true },
+      });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2025') {
-          throw new NotFoundException(`Circle with id ${circleId} not found`);
-        }
-      }
       throw error;
     }
   }
@@ -493,7 +557,7 @@ export class CirclesService {
 
     try {
       let existingUserIds: number[] = [];
-      let createdUserIds: number[] = [];
+      // let createdUserIds: number[] = [];
 
       if (circleMembersEmail && circleMembersEmail.length > 0) {
         // Find existing users by email
@@ -506,45 +570,45 @@ export class CirclesService {
         });
 
         existingUserIds = users.map((user) => user.id);
-        const nonExistingEmails = circleMembersEmail.filter(
-          (email) => !users.some((user) => user.email === email),
-        );
+        // const nonExistingEmails = circleMembersEmail.filter(
+        //   (email) => !users.some((user) => user.email === email),
+        // );
 
         // Create users for non-existing emails
-        const createdUsers = await Promise.all(
-          nonExistingEmails.map(async (email) => {
-            const password = 'generatePassword'; // Generate a random password
-            const user = await this.prisma.user.create({
-              data: {
-                email,
-                password,
-                isActivated: true, // Set isActivated to true for newly created users
-              },
-            });
+        // const createdUsers = await Promise.all(
+        //   nonExistingEmails.map(async (email) => {
+        //     const password = 'generatePassword'; // Generate a random password
+        //     const user = await this.prisma.user.create({
+        //       data: {
+        //         email,
+        //         password,
+        //         isActivated: true, // Set isActivated to true for newly created users
+        //       },
+        //     });
 
-            // Send email with account creation details and password
-            // await this.mailService.sendEmail(
-            //   email,
-            //   'Account Created for Empylo Circle',
-            //   `Hi there,
+        //     // Send email with account creation details and password
+        //     // await this.mailService.sendEmail(
+        //     //   email,
+        //     //   'Account Created for Empylo Circle',
+        //     //   `Hi there,
 
-            //   An account has been created for you on the Empylo platform to join a circle. Your login credentials are:
+        //     //   An account has been created for you on the Empylo platform to join a circle. Your login credentials are:
 
-            //   Email: ${email}
-            //   Password: ${password}
+        //     //   Email: ${email}
+        //     //   Password: ${password}
 
-            //   Please download the Empylo app from the Google Play Store (https://play.google.com/store/apps/details?id=com.empylo) or the Apple App Store (https://apps.apple.com/us/app/empylo/id1234567890) to continue using the platform.
+        //     //   Please download the Empylo app from the Google Play Store (https://play.google.com/store/apps/details?id=com.empylo) or the Apple App Store (https://apps.apple.com/us/app/empylo/id1234567890) to continue using the platform.
 
-            //   Thank you,
-            //   The Empylo Team
-            //   `,
-            // );
+        //     //   Thank you,
+        //     //   The Empylo Team
+        //     //   `,
+        //     // );
 
-            return user.id; // Return only the user ID
-          }),
-        );
+        //     return user.id; // Return only the user ID
+        //   }),
+        // );
 
-        createdUserIds = createdUsers;
+        // createdUserIds = createdUsers;
       }
 
       const baseUrl = 'https://empylo.com';
@@ -559,7 +623,7 @@ export class CirclesService {
           members: {
             connect: [
               ...existingUserIds.map((userId) => ({ id: userId })),
-              ...createdUserIds.map((userId) => ({ id: userId })),
+              // ...createdUserIds.map((userId) => ({ id: userId })),
             ],
           },
         },

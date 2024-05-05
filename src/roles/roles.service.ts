@@ -14,8 +14,8 @@ import {
 import {
   PaginationResponseDto,
   RolePaginationDto,
-} from 'src/user/dto/pagination.dto';
-import { UserService } from 'src/user/user.service';
+} from 'src/users/dto/pagination.dto';
+import { UserService } from 'src/users/user.service';
 import { Permissions, Role, Modules } from '@prisma/client';
 
 @Injectable()

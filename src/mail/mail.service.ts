@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailData } from './interfaces/mail-data.interface';
-import { MailerService } from '../mailer/mailer.service';
+// import { MailerService } from '../mailer/mailer.service';
+import { MailerService } from '@nestjs-modules/mailer';
 import * as path from 'path';
 
 @Injectable()
@@ -19,13 +20,14 @@ export class MailService {
     await this.mailerService.sendMail({
       to: mailData.to,
       subject: emailConfirmTitle,
-      templatePath: path.join(
-        process.cwd(),
-        'src',
-        'mail',
-        'mail-templates',
-        'socialActivation.hbs',
-      ),
+      // templatePath: path.join(
+      //   process.cwd(),
+      //   'src',
+      //   'mail',
+      //   'mail-templates',
+      //   'socialActivation.hbs',
+      // ),
+      template: './socialActivation',
       context: {
         title: emailConfirmTitle,
         actionTitle: emailConfirmTitle,
@@ -42,13 +44,14 @@ export class MailService {
     await this.mailerService.sendMail({
       to: mailData.to,
       subject: emailConfirmTitle,
-      templatePath: path.join(
-        process.cwd(),
-        'src',
-        'mail',
-        'mail-templates',
-        'activations.hbs',
-      ),
+      template: './activations',
+      // templatePath: path.join(
+      //   process.cwd(),
+      //   'src',
+      //   'mail',
+      //   'mail-templates',
+      //   'activations.hbs',
+      // ),
       context: {
         title: emailConfirmTitle,
         // url: url?.toString(),
@@ -65,13 +68,14 @@ export class MailService {
     await this.mailerService.sendMail({
       to: mailData.to,
       subject: emailConfirmTitle,
-      templatePath: path.join(
-        process.cwd(),
-        'src',
-        'mail',
-        'mail-templates',
-        'addMemberActivation.hbs',
-      ),
+      template: './addMemberActivation',
+      // templatePath: path.join(
+      //   process.cwd(),
+      //   'src',
+      //   'mail',
+      //   'mail-templates',
+      //   'addMemberActivation.hbs',
+      // ),
       context: {
         title: emailConfirmTitle,
         // url: url?.toString(),
@@ -91,13 +95,14 @@ export class MailService {
     await this.mailerService.sendMail({
       to: mailData.to,
       subject: resetPasswordTitle,
-      templatePath: path.join(
-        process.cwd(),
-        'src',
-        'mail',
-        'mail-templates',
-        'forgot-password.hbs',
-      ),
+      template: './forgot-password',
+      // templatePath: path.join(
+      //   process.cwd(),
+      //   'src',
+      //   'mail',
+      //   'mail-templates',
+      //   'forgot-password.hbs',
+      // ),
       context: {
         title: resetPasswordTitle,
         actionTitle: resetPasswordTitle,
@@ -116,13 +121,14 @@ export class MailService {
     await this.mailerService.sendMail({
       to: mailData.to,
       subject: decativationTitle,
-      templatePath: path.join(
-        process.cwd(),
-        'src',
-        'mail',
-        'mail-templates',
-        'accountDeactivation.hbs',
-      ),
+      template: './accountDeactivation',
+      // templatePath: path.join(
+      //   process.cwd(),
+      //   'src',
+      //   'mail',
+      //   'mail-templates',
+      //   'accountDeactivation.hbs',
+      // ),
       context: {
         title: decativationTitle,
         actionTitle: decativationTitle,
@@ -139,13 +145,14 @@ export class MailService {
     await this.mailerService.sendMail({
       to: mailData.to,
       subject: decativationTitle,
-      templatePath: path.join(
-        process.cwd(),
-        'src',
-        'mail',
-        'mail-templates',
-        'accountReactivation.hbs',
-      ),
+      template: './accountReactivation',
+      // templatePath: path.join(
+      //   process.cwd(),
+      //   'src',
+      //   'mail',
+      //   'mail-templates',
+      //   'accountReactivation.hbs',
+      // ),
       context: {
         title: decativationTitle,
         actionTitle: decativationTitle,

@@ -11,7 +11,7 @@ import {
   comparePassword,
   createOTPToken,
 } from 'src/common/utils';
-import { UserService } from 'src/user/user.service';
+import { UserService } from 'src/users/user.service';
 import { MailService } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {

@@ -1,7 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { RolePermissionService } from './roles.service';
 import { RolesController } from './roles.controller';
-import { UserModule } from 'src/user/user.module';
+import { UserModule } from 'src/users/user.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({

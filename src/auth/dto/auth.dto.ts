@@ -168,7 +168,8 @@ export class GettingStartedUpdateProfileDto {
     nullable: true,
   })
   @IsOptional()
-  profileImage: Express.Multer.File;
+  // profileImage: Express.Multer.File;
+  profileImage: string | null;
 }
 
 export class UserGettingStartedDto {

@@ -23,9 +23,9 @@ import {
   GettingStartedUpdateProfileDto,
   ChangePasswordDto,
 } from './dto/auth.dto';
-import { PasswordResetDto } from 'src/user/dto/password-reset.dto';
+import { PasswordResetDto } from 'src/users/dto/password-reset.dto';
 import { AuthService } from './auth.service';
-import { OtpDto } from 'src/user/dto/resend-code.dto';
+import { OtpDto } from 'src/users/dto/resend-code.dto';
 import { ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import { VerifyDto } from './dto/login-user.dto';
 import { BaseResponse } from 'src/common/utils';
