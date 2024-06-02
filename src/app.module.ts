@@ -15,6 +15,7 @@ import { CirclesModule } from './circles/circles.module';
 import { providePrismaClientExceptionFilter } from 'nestjs-prisma';
 import { AllExceptionsFilter } from './common/error/all-exceptions.filter.ts';
 import { CompanyModule } from './company/company.module';
+import { AssessmentsModule } from './assessments/assessments.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { CompanyModule } from './company/company.module';
     RolesModule,
     CirclesModule,
     CompanyModule,
+    AssessmentsModule,
   ],
   controllers: [AppController],
   providers: [

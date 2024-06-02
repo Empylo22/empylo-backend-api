@@ -6,6 +6,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsStrongPassword,
   IsUUID,
   Length,
   MinLength,
@@ -170,6 +171,54 @@ export class GettingStartedUpdateProfileDto {
   @IsOptional()
   // profileImage: Express.Multer.File;
   profileImage: string | null;
+}
+
+export class CompanySignUpDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  companyName: string;
+
+  @ApiProperty()
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  address: string;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  addressCountry: string;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  addressState: string;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  addressCity: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  // @IsStrongPassword()
+  password: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  industry: string;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  website: string;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  companyDescription: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  termsConditions: boolean;
 }
 
 export class UserGettingStartedDto {

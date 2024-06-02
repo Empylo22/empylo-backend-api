@@ -13,6 +13,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import {
+  CompanySignUpDto,
   ForgotPasswordDto,
   LoginDto,
   ResetPasswordDto,
@@ -44,7 +45,7 @@ export class AuthController {
     const result = await this.authService.userGettingStarted(dto);
     return {
       message: 'User created. Email sent.',
-      status: HttpStatus.OK,
+      status: HttpStatus.CREATED,
       result,
     };
     // try {
@@ -61,6 +62,18 @@ export class AuthController {
     //     // error: error.stack,
     //   };
     // }
+  }
+
+  @ApiBody({ type: CompanySignUpDto })
+  @ApiCreatedResponse({ type: CompanySignUpDto })
+  @Post('company-signup')
+  async companySignUp(@Body() dto: CompanySignUpDto): Promise<BaseResponse> {
+    const result = await this.authService.companySignUp(dto);
+    return {
+      message: 'User created. Email sent.',
+      status: HttpStatus.CREATED,
+      result,
+    };
   }
 
   @ApiBody({ type: VerifyDto })

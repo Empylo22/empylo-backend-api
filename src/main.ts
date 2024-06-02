@@ -1,5 +1,5 @@
 import {
-  AbstractHttpAdapter,
+  // AbstractHttpAdapter,
   HttpAdapterHost,
   NestFactory,
   Reflector,
@@ -9,15 +9,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from './config/config.service';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { PrismaClientExceptionFilter } from 'nestjs-prisma';
-import { AllExceptionsFilter } from './common/error/all-exceptions.filter.ts';
-import { CustomHttpAdapterHost } from './common/error/custom-http-adapter-host';
+// import { AllExceptionsFilter } from './common/error/all-exceptions.filter.ts';
+// import { CustomHttpAdapterHost } from './common/error/custom-http-adapter-host';
 
 async function bootstrap() {
   const httpPort = new ConfigService().get('httpPort');
   // const gatewayPort = new ConfigService().get('gatewayPort');
-  const ipAddress = JSON.parse(process.env.IS_DEVMODE)
-    ? `localhost`
-    : new ConfigService().get('baseIp');
+  // const ipAddress = JSON.parse(process.env.IS_DEVMODE)
+  //   ? `localhost`
+  //   : new ConfigService().get('baseIp');
 
   const app = await NestFactory.create(AppModule);
 

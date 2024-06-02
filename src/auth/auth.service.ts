@@ -15,6 +15,7 @@ import { UserService } from 'src/users/user.service';
 import { MailService } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
+  CompanySignUpDto,
   ForgotPasswordDto,
   LoginDto,
   ResetPasswordDto,
@@ -70,15 +71,90 @@ export class AuthService {
           },
         });
 
+        await this.mailService.userSignUp({
+          to: email,
+          data: {
+            code: otpToken.toString(),
+          },
+        });
+
         return { createdUser, activationToken };
       });
 
-      await this.mailService.userSignUp({
-        to: email,
-        data: {
-          code: otpToken.toString(),
+      // await this.mailService.userSignUp({
+      //   to: email,
+      //   data: {
+      //     code: otpToken.toString(),
+      //   },
+      // });
+
+      return 'Account successfully created. Check email for verification code';
+    } catch (error) {
+      console.error('Error creating user or activation token:', error);
+      // throw new BadRequestException(
+      //   'An error occurred during account creation',
+      // );
+      throw error;
+    }
+  }
+
+  async companySignUp(dto: CompanySignUpDto): Promise<string> {
+    const { email, password } = dto;
+
+    const foundUser = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (foundUser) {
+      throw new BadRequestException(
+        'User with the specified email already exists.',
+      );
+    }
+
+    const otpToken = await createOTPToken();
+    const hashedPassword = await hashFunction(password);
+
+    try {
+      await this.prisma.$transaction(
+        async (prisma) => {
+          const createdUser = await prisma.user.create({
+            data: {
+              password: hashedPassword,
+              ...dto,
+            },
+          });
+
+          const expiryDate = new Date(Date.now() + 10 * 60000); // 2880 minutes = 2 days
+
+          const activationToken = await prisma.tokenManager.create({
+            data: {
+              token: otpToken,
+              expiryDate,
+              user: { connect: { id: createdUser.id } },
+              operationType: 'Email Verification',
+            },
+          });
+
+          await this.mailService.userSignUp({
+            to: email,
+            data: {
+              code: otpToken.toString(),
+            },
+          });
+
+          return { createdUser, activationToken };
         },
-      });
+        {
+          timeout: 10000, // Increase timeout to 10000 milliseconds (10 seconds)
+        },
+      );
+
+      // await this.mailService.userSignUp({
+      //   to: email,
+      //   data: {
+      //     code: otpToken.toString(),
+      //   },
+      // });
 
       return 'Account successfully created. Check email for verification code';
     } catch (error) {

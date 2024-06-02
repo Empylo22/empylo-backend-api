@@ -7,48 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// model User {
-//   id                  Int     @id @default(autoincrement())
-//   firstName           String?
-//   lastName            String?
-//   email               String  @unique
-//   password            String?
-//   accountType         String?
-//   phoneNumber         String? @unique
-//   isActivated         Boolean @default(false)
-//   twoStepVerification Boolean @default(false)
-//   companyName         String?
-//   isDeleted           Boolean @default(false)
-//   companyId           Int?
-//   roleId              Int?
-//   profileImage        String?
-
-//   lastLogin           DateTime?
-//   isEmailVerified     Boolean?          @default(false)
-//   status              String?           @default("inactive")
-//   gender              String?
-//   maritalStatus       String?
-//   empyloID            String?
-//   industry            String?
-//   website             String?
-//   companyDescription  String?
-//   address             String?
-//   addressCity         String?
-//   addressState        String?
-//   emailNotification   Boolean?          @default(false)
-//   campaignNtification Boolean?          @default(false)
-//   termsConditions     Boolean?          @default(false)
-//   socialId            String?
-//   socialProvider      String?
-//   createdAt           DateTime?         @default(now())
-//   updatedAt           DateTime?         @updatedAt
-//   activationToken     ActivationToken[]
-//   otpObject           OtpObject[]
-//   resetToken          ResetToken[]
-//   role                Role?             @relation(fields: [roleId], references: [id])
-//   tokenManager        TokenManager[]
-// }
-
 model User {
   id                  Int            @id @default(autoincrement())
   firstName           String?
@@ -80,6 +38,7 @@ model User {
   website             String?
   companyDescription  String?
   address             String?
+  addressCountry      String?
   addressCity         String?
   addressState        String?
   emailNotification   Boolean?       @default(false)
@@ -95,51 +54,8 @@ model User {
   ownedCircles        Circle[]
   company             User?          @relation("CompanyMembers", fields: [companyId], references: [id])
   members             User[]         @relation("CompanyMembers")
+  answers             Answer[]
 }
-
-// model User {
-//   id                  Int            @id @default(autoincrement())
-//   firstName           String?
-//   lastName            String?
-//   email               String         @unique
-//   password            String?
-//   accountType         String?
-//   phoneNumber         String?        @unique
-//   isActivated         Boolean        @default(false)
-//   twoStepVerification Boolean        @default(false)
-//   companyName         String?
-//   isDeleted           Boolean        @default(false)
-//   companyId           Int?
-//   roleId              Int?
-//   profileImage        String?
-//   ageRange            String?
-//   lastLogin           DateTime?
-//   isEmailVerified     Boolean?       @default(false)
-//   status              String?        @default("inactive")
-//   gender              String?
-//   maritalStatus       String?
-//   empyloID            String?
-//   industry            String?
-//   website             String?
-//   companyDescription  String?
-//   address             String?
-//   addressCity         String?
-//   addressState        String?
-//   emailNotification   Boolean?       @default(false)
-//   campaignNtification Boolean?       @default(false)
-//   termsConditions     Boolean?       @default(false)
-//   socialId            String?
-//   socialProvider      String?
-//   createdAt           DateTime?      @default(now())
-//   updatedAt           DateTime?      @updatedAt
-//   // activationToken     ActivationToken[]
-//   // otpObject           OtpObject[]
-//   // resetToken          ResetToken[]
-//   role                Role?          @relation(fields: [roleId], references: [id])
-//   tokenManager        TokenManager[]
-//   circles             Circle[]       @relation("CircleMembers")
-//   ownedCircles        Circle[]
-// }
 
 model Circle {
   id                Int      @id @default(autoincrement())
@@ -237,4 +153,42 @@ model RolePermission {
   permissions  Permissions @relation(fields: [permissionId], references: [id])
 
   @@id([roleId, permissionId])
+}
+
+model Assessment {
+  id        Int            @id @default(autoincrement())
+  type      AssessmentType
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  topics    Topic[]
+}
+
+model Topic {
+  id           Int        @id @default(autoincrement())
+  name         String
+  assessmentId Int
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  questions    Question[]
+}
+
+model Question {
+  id      Int      @id @default(autoincrement())
+  text    String
+  topicId Int
+  topic   Topic    @relation(fields: [topicId], references: [id])
+  answers Answer[]
+}
+
+model Answer {
+  id         Int      @id @default(autoincrement())
+  text       String
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  questionId Int
+  question   Question @relation(fields: [questionId], references: [id])
+}
+
+enum AssessmentType {
+  DAILY
+  WEEKLY
 }
