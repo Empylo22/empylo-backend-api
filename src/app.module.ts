@@ -16,6 +16,11 @@ import { providePrismaClientExceptionFilter } from 'nestjs-prisma';
 import { AllExceptionsFilter } from './common/error/all-exceptions.filter.ts';
 import { CompanyModule } from './company/company.module';
 import { AssessmentsModule } from './assessments/assessments.module';
+import { UploadServiceModule } from './upload-service/upload-service.module';
+// import {
+//   LocalUploadService,
+//   S3UploadService,
+// } from './upload-service/upload.service';
 
 @Module({
   imports: [
@@ -31,6 +36,7 @@ import { AssessmentsModule } from './assessments/assessments.module';
     CirclesModule,
     CompanyModule,
     AssessmentsModule,
+    UploadServiceModule,
   ],
   controllers: [AppController],
   providers: [

@@ -7,6 +7,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// model User {
+//   id                  Int            @id @default(autoincrement())
+//   firstName           String?
+//   lastName            String?
+//   email               String         @unique
+//   password            String?
+//   accountType         String?
+//   phoneNumber         String?        @unique
+//   isActivated         Boolean        @default(false)
+//   twoStepVerification Boolean        @default(false)
+//   companyName         String?
+//   isDeleted           Boolean        @default(false)
+//   companyId           Int?
+//   roleId              Int?
+//   ethnicity           String?
+//   department          String?
+//   jobRole             String?
+//   DOB                 String?
+//   profileImage        String?
+//   ageRange            String?
+//   lastLogin           DateTime?
+//   isEmailVerified     Boolean?       @default(false)
+//   status              String?        @default("inactive")
+//   gender              String?
+//   disability          String?
+//   maritalStatus       String?
+//   empyloID            String?
+//   industry            String?
+//   website             String?
+//   companyDescription  String?
+//   address             String?
+//   addressCountry      String?
+//   addressCity         String?
+//   addressState        String?
+//   emailNotification   Boolean?       @default(false)
+//   campaignNtification Boolean?       @default(false)
+//   termsConditions     Boolean?       @default(false)
+//   socialId            String?
+//   socialProvider      String?
+//   createdAt           DateTime?      @default(now())
+//   updatedAt           DateTime?      @updatedAt
+//   role                Role?          @relation(fields: [roleId], references: [id])
+//   tokenManager        TokenManager[]
+//   circles             Circle[]       @relation("CircleMembers")
+//   ownedCircles        Circle[]
+//   company             User?          @relation("CompanyMembers", fields: [companyId], references: [id])
+//   members             User[]         @relation("CompanyMembers")
+//   answers             Answer[]
+// }
+
+// model Circle {
+//   id                Int      @id @default(autoincrement())
+//   circleName        String
+//   circleDescription String?
+//   circleShareLink   String   @unique
+//   wellbeingScore    Float?
+//   activityLevel     String?
+//   circleStatus      String?
+//   circleNos         Int?
+//   circleImg         String?
+//   circleScoreDetail String?
+//   circleOwner       User     @relation(fields: [circleOwncerId], references: [id])
+//   circleOwncerId    Int
+//   members           User[]   @relation("CircleMembers")
+//   createdAt         DateTime @default(now())
+//   updatedAt         DateTime @updatedAt
+// }
+
 model User {
   id                  Int            @id @default(autoincrement())
   firstName           String?
@@ -50,29 +118,40 @@ model User {
   updatedAt           DateTime?      @updatedAt
   role                Role?          @relation(fields: [roleId], references: [id])
   tokenManager        TokenManager[]
-  circles             Circle[]       @relation("CircleMembers")
-  ownedCircles        Circle[]
+  circles             CircleMember[] @relation("CircleMember")
+  ownedCircles        Circle[]       @relation("CircleOwner")
   company             User?          @relation("CompanyMembers", fields: [companyId], references: [id])
   members             User[]         @relation("CompanyMembers")
   answers             Answer[]
 }
 
 model Circle {
-  id                Int      @id @default(autoincrement())
+  id                Int            @id @default(autoincrement())
   circleName        String
   circleDescription String?
-  circleShareLink   String   @unique
+  circleShareLink   String         @unique
   wellbeingScore    Float?
   activityLevel     String?
   circleStatus      String?
   circleNos         Int?
   circleImg         String?
   circleScoreDetail String?
-  circleOwner       User     @relation(fields: [circleOwncerId], references: [id])
+  circleOwner       User           @relation("CircleOwner", fields: [circleOwncerId], references: [id])
   circleOwncerId    Int
-  members           User[]   @relation("CircleMembers")
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  members           CircleMember[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+}
+
+model CircleMember {
+  user     User      @relation("CircleMember", fields: [userId], references: [id])
+  userId   Int
+  circle   Circle    @relation(fields: [circleId], references: [id])
+  circleId Int
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+
+  @@id([userId, circleId])
 }
 
 model TokenManager {
@@ -87,14 +166,6 @@ model TokenManager {
   updatedAt     DateTime? @updatedAt
 }
 
-// model ActivationToken {
-//   id         Int      @id @default(autoincrement())
-//   token      String
-//   expiryDate DateTime
-//   userId     Int?
-//   user       User?    @relation(fields: [userId], references: [id])
-// }
-
 model Modules {
   id                Int           @id @default(autoincrement())
   moduleName        String        @unique
@@ -104,16 +175,6 @@ model Modules {
   lastModifiedDate  DateTime?
   permissions       Permissions[]
 }
-
-// model OtpObject {
-//   id         Int      @id @default(autoincrement())
-//   expiryDate DateTime
-//   jwt        String
-//   otp        String
-//   isUsed     Boolean  @default(false)
-//   userId     Int?
-//   user       User?    @relation(fields: [userId], references: [id])
-// }
 
 model Permissions {
   id               Int              @id @default(autoincrement())
@@ -125,14 +186,6 @@ model Permissions {
   modules          Modules?         @relation(fields: [moduleId], references: [id])
   rolePermission   RolePermission[]
 }
-
-// model ResetToken {
-//   id         Int      @id @default(autoincrement())
-//   token      String
-//   expiryDate DateTime
-//   userId     Int?
-//   user       User?    @relation(fields: [userId], references: [id])
-// }
 
 model Role {
   id               Int              @id @default(autoincrement())

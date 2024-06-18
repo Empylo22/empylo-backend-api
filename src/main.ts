@@ -37,8 +37,8 @@ async function bootstrap() {
   });
 
   const config = new DocumentBuilder()
-    .setTitle('Employ Project')
-    .setDescription('The Employ API description.')
+    .setTitle('Empylo Project')
+    .setDescription('The Empylo API description.')
     .setVersion('1.0')
     // .addServer(`http://${ipAddress}:${httpPort}`)
     .addBearerAuth({

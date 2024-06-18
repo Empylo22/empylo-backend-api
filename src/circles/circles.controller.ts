@@ -5,12 +5,11 @@ import {
   Get,
   Param,
   Post,
-  NotFoundException,
-  InternalServerErrorException,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
   Query,
+  Response,
   HttpStatus,
   ParseIntPipe,
   UseGuards,
@@ -29,11 +28,9 @@ import {
 } from '@nestjs/swagger';
 
 import { CirclesService } from './circles.service';
-// import { CreateCircleDto } from './dto/create-circle.dto';
+// import { Response } from 'express';
 import { UpdateCircleDto } from './dto/update-circle.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { BaseResponse } from 'src/common/utils';
 import { CreateCircleWithMembersDto } from './dto/create-circle-with-members.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-guard.guard';
@@ -45,15 +42,20 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-guard.guard';
 export class CirclesController {
   constructor(private readonly circleService: CirclesService) {}
 
-  @Post('create-circle/:circleOwnerId')
+  @ApiConsumes('multipart/form-data')
   @ApiBody({ type: CreateCircleWithMembersDto })
+  @Post('create-circle/:circleOwnerId')
+  @UseInterceptors(FileInterceptor('circleImage'))
   async createCircleWithMembers(
+    @UploadedFile()
+    circleImg: Express.Multer.File,
     @Param('circleOwnerId', ParseIntPipe) circleOwnerId: number,
     @Body() createCircleDto: CreateCircleWithMembersDto,
   ): Promise<BaseResponse> {
     try {
       const circle = await this.circleService.createCircleWithMembers(
         circleOwnerId,
+        circleImg,
         createCircleDto,
       );
       return {
@@ -182,28 +184,22 @@ export class CirclesController {
   //   }
   // }
 
-  @Delete('delete-circle/:circleId')
-  async deleteCircle(@Param('circleId') circleId: number) {
-    const result = await this.circleService.deleteCircle(+circleId);
+  @Patch('activate-circle/:circleId')
+  async activateCircle(@Param('circleId') circleId: number) {
+    const result = await this.circleService.activateCircle(+circleId);
     return {
-      message: 'Circle deleted successfully',
+      message: 'Circle activated successfully',
       status: HttpStatus.OK,
       result,
     };
   }
 
-  @Patch('update-circle/:circleId')
-  async updateCircle(
-    @Param('circleId') circleId: number,
-    @Body() updateCircleDto: UpdateCircleDto,
-  ) {
-    const result = await this.circleService.updateCircle(
-      +circleId,
-      updateCircleDto,
-    );
+  @Patch('deactivate-circle/:circleId')
+  async deactivateCircle(@Param('circleId') circleId: number) {
+    const result = await this.circleService.deactivateCircle(+circleId);
     return {
-      message: 'Circle updated successfully',
-      status: HttpStatus.CREATED,
+      message: 'Circle deactivated successfully',
+      status: HttpStatus.OK,
       result,
     };
   }
@@ -228,81 +224,144 @@ export class CirclesController {
     };
   }
 
-  // @Post('batch-upload-add-circle-member/:circleId/members/batch')
-  // @UseInterceptors(
-  //   FileInterceptor('file', {
-  //     storage: diskStorage({
-  //       destination: './uploads',
-  //       filename: (req, file, cb) => {
-  //         const uniqueSuffix =
-  //           Date.now() + '-' + Math.round(Math.random() * 1e9);
-  //         const ext = extname(file.originalname);
-  //         const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
-  //         cb(null, filename);
-  //       },
-  //     }),
-  //   }),
-  // )
-  // async batchAddMembersToCircle(
-  //   @Param('circleId') circleId: number,
-  //   @UploadedFile() file: Express.Multer.File,
-  // ) {
-  //   const result = await this.circleService.batchAddMembersToCircle(
-  //     circleId,
-  //     file,
-  //   );
+  @Delete('delete-circle/:circleId')
+  async deleteCircle(@Param('circleId') circleId: number) {
+    const result = await this.circleService.deleteCircle(+circleId);
+    return {
+      message: 'Circle deleted successfully',
+      status: HttpStatus.OK,
+      result,
+    };
+  }
 
-  //   return {
-  //     message: 'Circle members batch upload added successfully',
-  //     status: HttpStatus.CREATED,
-  //     result,
-  //   };
-  // }
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: UpdateCircleDto })
+  @Patch('update-circle/:circleId')
+  @UseInterceptors(FileInterceptor('circleImage'))
+  async updateCircle(
+    @UploadedFile() circleImg: Express.Multer.File,
+    @Param('circleId') circleId: number,
+    @Body() updateCircleDto: UpdateCircleDto,
+  ) {
+    const result = await this.circleService.updateCircle(
+      +circleId,
+      circleImg,
+      updateCircleDto,
+    );
+    return {
+      message: 'Circle updated successfully',
+      status: HttpStatus.CREATED,
+      result,
+    };
+  }
 
-  @ApiConsumes('multipart/form-data') // Specify the content type
+  @Get('batch-upload-sample-template')
+  // async downloadSampleTemplate(@Res() res: Response) {
+  async generateTemplate(@Response() res): Promise<any> {
+    try {
+      // const fileBuffer = await this.circleService.generateSampleTemplate(res);
+
+      // // Set response headers for file download
+      // res.setHeader(
+      //   'Content-Type',
+      //   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      // );
+      // res.setHeader(
+      //   'Content-Disposition',
+      //   'attachment; filename=batch_upload_template.xlsx',
+      // );
+
+      // // Send the file as the response
+      // return res.send(fileBuffer);
+      return await this.circleService.generateSampleTemplate(res);
+    } catch (error) {
+      // Handle errors appropriately
+      // console.error(error);
+      throw error;
+    }
+  }
+
+  @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary', // Specify binary format for file upload
-        },
-      },
+      properties: { file: { type: 'string', format: 'binary' } },
     },
   })
-  @Post('batch-upload-add-circle-members/:circleId/members/batch')
-  // @UseInterceptors(
-  //   FileInterceptor('file', {
-  //     storage: diskStorage({
-  //       destination: './uploads',
-  //       filename: (req, file, cb) => {
-  //         const uniqueSuffix =
-  //           Date.now() + '-' + Math.round(Math.random() * 1e9);
-  //         const ext = extname(file.originalname);
-  //         const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
-  //         cb(null, filename);
-  //       },
-  //     }),
-  //   }),
-  // )
+  @Patch('batch-add-circle-members/:circleId')
   @UseInterceptors(FileInterceptor('file'))
-  public async batchAddMembersToCircleWithNotFoundMailError(
-    @UploadedFile()
-    file: Express.Multer.File,
-    @Param('circleId', ParseIntPipe) circleId: number,
+  async batchAddMembersToCircle(
+    @UploadedFile() file: Express.Multer.File,
+    @Param('circleId') circleId: number,
   ) {
-    try {
-      return await this.circleService.batchAddMembersToCircle(circleId, file);
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      } else if (error instanceof BadRequestException) {
-        // Handle the BadRequestException, e.g., return the error message
-        return { error: error.message };
-      }
-      throw new InternalServerErrorException();
+    if (!file) {
+      throw new BadRequestException('File is required');
     }
+    const result = await this.circleService.batchAddMembersToCircle(
+      +circleId,
+      file,
+    );
+    return {
+      message: 'Members added successfully',
+      status: HttpStatus.OK,
+      result,
+    };
+  }
+
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
+  @Patch('batch-add-circle-members-with-no-user-error/:circleId')
+  @UseInterceptors(FileInterceptor('file'))
+  async batchAddMembersToCircleWithNotFoundMailError(
+    @UploadedFile() file: Express.Multer.File,
+    @Param('circleId') circleId: number,
+  ) {
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+    const result =
+      await this.circleService.batchAddMembersToCircleWithNotFoundMailError(
+        +circleId,
+        file,
+      );
+    return {
+      message: 'Members added successfully',
+      status: HttpStatus.OK,
+      result,
+    };
+  }
+
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
+  @Patch('batch-add-circle-members-with-auto-create-user/:circleId')
+  @UseInterceptors(FileInterceptor('file'))
+  async batchAddMembersToCircleWithAutoCreateNotFoundEmail(
+    @UploadedFile() file: Express.Multer.File,
+    @Param('circleId') circleId: number,
+  ) {
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+    const result =
+      await this.circleService.batchAddMembersToCircleWithAutoCreateNotFoundEmail(
+        +circleId,
+        file,
+      );
+    return {
+      message: 'Members added successfully',
+      status: HttpStatus.OK,
+      result,
+    };
   }
 
   @Get('join-circle-with-sharelink/:shareLink')

@@ -76,6 +76,20 @@ export class AuthController {
     };
   }
 
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiCreatedResponse({ type: ForgotPasswordDto })
+  @Post('resend-otp')
+  async resendVerificationOtp(
+    @Body() dto: ForgotPasswordDto,
+  ): Promise<BaseResponse> {
+    const result = await this.authService.resendVerificationOtp(dto);
+    return {
+      message: 'Resent verification code successfully.',
+      status: HttpStatus.OK,
+      result,
+    };
+  }
+
   @ApiBody({ type: VerifyDto })
   // @ApiOkResponse({ type: VerifyDto })
   @Post('verify-email-otp')
@@ -146,7 +160,8 @@ export class AuthController {
     try {
       const response = await this.authService.forgetPassword(forgotPasswordDto);
       return {
-        message: 'Forgot password token sent.',
+        message: `Forgot password token sent.`,
+        // message: `Forgot password token sent to ${forgotPasswordDto.email}`,
         status: HttpStatus.OK,
         result: response,
       };

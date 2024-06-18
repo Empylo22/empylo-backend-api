@@ -15,7 +15,7 @@ import {
   ChangePasswordDto,
   GettingStartedUpdateProfileDto,
 } from 'src/auth/dto/auth.dto';
-import { S3UploadService } from 'src/config/upload.service';
+import { S3UploadService } from 'src/upload-service/upload.service';
 
 @Injectable()
 export class UserService {

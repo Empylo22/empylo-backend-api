@@ -99,7 +99,7 @@ export class AuthService {
   }
 
   async companySignUp(dto: CompanySignUpDto): Promise<string> {
-    const { email, password } = dto;
+    const { email, password, ...companyDto } = dto;
 
     const foundUser = await this.prisma.user.findUnique({
       where: { email },
@@ -113,14 +113,16 @@ export class AuthService {
 
     const otpToken = await createOTPToken();
     const hashedPassword = await hashFunction(password);
-
+    console.log(hashedPassword);
     try {
       await this.prisma.$transaction(
         async (prisma) => {
           const createdUser = await prisma.user.create({
             data: {
               password: hashedPassword,
-              ...dto,
+              accountType: 'company',
+              email,
+              ...companyDto,
             },
           });
 
@@ -145,7 +147,7 @@ export class AuthService {
           return { createdUser, activationToken };
         },
         {
-          timeout: 10000, // Increase timeout to 10000 milliseconds (10 seconds)
+          timeout: 30000, // Increase timeout to 10000 milliseconds (10 seconds)
         },
       );
 
@@ -164,6 +166,54 @@ export class AuthService {
       // );
       throw error;
     }
+  }
+
+  async resendVerificationOtp(dto: ForgotPasswordDto): Promise<string> {
+    const { email } = dto;
+
+    const foundUser = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!foundUser) {
+      throw new BadRequestException(
+        'User with the specified email does not exist.',
+      );
+    }
+
+    const existingToken = await this.prisma.tokenManager.findFirst({
+      where: {
+        userId: foundUser.id,
+        operationType: 'Email Verification',
+      },
+    });
+
+    if (existingToken) {
+      await this.prisma.tokenManager.delete({
+        where: { id: existingToken.id },
+      });
+    }
+
+    const otpToken = await createOTPToken();
+    const expiryDate = new Date(Date.now() + 10 * 60000); // 10 minutes
+
+    await this.prisma.tokenManager.create({
+      data: {
+        token: otpToken,
+        expiryDate,
+        user: { connect: { id: foundUser.id } },
+        operationType: 'Email Verification',
+      },
+    });
+
+    await this.mailService.userSignUp({
+      to: email,
+      data: {
+        code: otpToken.toString(),
+      },
+    });
+
+    return 'Verification code resent successfully. Check your email.';
   }
 
   //v3
@@ -335,15 +385,15 @@ export class AuthService {
       data: { isUsed: true },
     });
 
-    // return 'Email verification successful';
-    const payload = {
-      sub: updatedUser,
-    };
-    delete updatedUser.password;
-    return {
-      accessToken: await this.jwtService.signAsync(payload),
-      user: updatedUser,
-    };
+    return 'Email verification successful';
+    // const payload = {
+    //   sub: updatedUser,
+    // };
+    // delete updatedUser.password;
+    // return {
+    //   accessToken: await this.jwtService.signAsync(payload),
+    //   user: updatedUser,
+    // };
   }
 
   async generateAndTwoStepOTP(user: User): Promise<any> {
@@ -393,8 +443,6 @@ export class AuthService {
         'Invalid email or password. Please check your credentials and try again.',
       );
     }
-
-    // console.log(existingUser);
 
     if (existingUser.isEmailVerified == false) {
       throw new BadRequestException(
@@ -554,6 +602,12 @@ export class AuthService {
     const foundUserWithCode = await this.prisma.user.findFirst({
       where: { id: passwordResetToken.userId },
     });
+
+    if (foundUserWithCode.isEmailVerified == false) {
+      throw new BadRequestException(
+        'Kindly verify your email to continue login.',
+      );
+    }
 
     if (foundUserWithCode.isDeleted == true) {
       throw new HttpException('User not found.', HttpStatus.NOT_FOUND);
