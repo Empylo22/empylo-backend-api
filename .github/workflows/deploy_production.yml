@@ -1,0 +1,39 @@
+name: deploy_production CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build
+    runs-on: [self-hosted, empylo-backend]
+    steps:
+      - name: Create a backup of the "uploads" folder
+        run: |
+          PUBLIC_FOLDER="$GITHUB_WORKSPACE/uploads"
+          BACKUP_FOLDER="/home/ec2-user/empylo_backend-uploads_backup"
+          mkdir -p "$BACKUP_FOLDER"
+          rsync -avz --exclude='node_modules' "$PUBLIC_FOLDER/" "$BACKUP_FOLDER/"
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: v20.11.0
+      - name: Setup PM2
+        run: npm install -g pm2
+      - name: Install App Dependencies
+        run: npm install
+      - name: 'Create env file'
+        run: |
+          echo "${{ secrets.PROD_ENV_FILE }}" > .env
+      - name: Build Nest Application
+        run: npm run build
+      - name: Start PM2
+        run: 'pm2 delete --silent empylo-backend-api || :; pm2 start pm2.config.json'
+      - name: Clean Up Backup
+        run: |
+          PUBLIC_FOLDER="$GITHUB_WORKSPACE/uploads"
+          BACKUP_FOLDER="/home/ec2-user/empylo_backend-uploads_backup"
+          rsync -avz "$BACKUP_FOLDER/" "$PUBLIC_FOLDER/"
+          rm -rf "$BACKUP_FOLDER/"
